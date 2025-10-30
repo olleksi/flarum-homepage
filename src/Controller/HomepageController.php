@@ -1,6 +1,6 @@
 <?php
 
-namespace YourUsername\Homepage\Controller;
+namespace Olleksi\Homepage\Controller;
 
 use Laminas\Diactoros\Response\HtmlResponse;
 use Psr\Http\Message\ResponseInterface;
