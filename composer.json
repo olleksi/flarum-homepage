@@ -9,7 +9,7 @@
     },
     "autoload": {
         "psr-4": {
-            "YourUsername\\Homepage\\": "src/"
+            "olleksi\\Homepage\\": "src/"
         }
     },
     "extra": {
