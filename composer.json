@@ -1,0 +1,26 @@
+{
+    "name": "olleksi/flarum-homepage",
+    "description": "Розширення з головною сторінкою для Flarum",
+    "type": "flarum-extension",
+    "keywords": ["flarum", "homepage"],
+    "license": "MIT",
+    "require": {
+        "flarum/core": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "YourUsername\\Homepage\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Homepage",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-home",
+                "backgroundColor": "#238c59",
+                "color": "#fff"
+            }
+        }
+    }
+}
