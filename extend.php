@@ -1,6 +1,6 @@
 <?php
 
-namespace olleksi\Homepage;
+namespace Olleksi\Homepage;
 
 use Flarum\Extend;
 
