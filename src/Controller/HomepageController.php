@@ -2,11 +2,8 @@
 
 namespace YourUsername\Homepage\Controller;
 
-use Flarum\Http\RequestUtil;
 use Flarum\Settings\SettingsRepositoryInterface;
-use Flarum\Tags\Tag;
-use Flarum\Discussion\Discussion;
-use Flarum\User\User;
+use Illuminate\Database\ConnectionInterface;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,21 +12,33 @@ use Psr\Http\Server\RequestHandlerInterface;
 class HomepageController implements RequestHandlerInterface
 {
     protected $settings;
+    protected $db;
 
-    public function __construct(SettingsRepositoryInterface $settings)
+    public function __construct(SettingsRepositoryInterface $settings, ConnectionInterface $db)
     {
         $this->settings = $settings;
+        $this->db = $db;
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        // Отримуємо дані
+        // Отримуємо дані з бази
         $forumTitle = $this->settings->get('forum_title', 'Форум');
-        $tags = Tag::whereNull('parent_id')->orderBy('position')->limit(6)->get();
-        $discussions = Discussion::latest()->limit(5)->get();
-        $usersCount = User::count();
-        $discussionsCount = Discussion::count();
-        $postsCount = \DB::table('posts')->count();
+        
+        $tags = $this->db->table('tags')
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->limit(6)
+            ->get();
+            
+        $discussions = $this->db->table('discussions')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+            
+        $usersCount = $this->db->table('users')->count();
+        $discussionsCount = $this->db->table('discussions')->count();
+        $postsCount = $this->db->table('posts')->count();
 
         $html = '<!DOCTYPE html>
 <html lang="uk">
@@ -216,7 +225,7 @@ class HomepageController implements RequestHandlerInterface
             <h1>🎉 Ласкаво просимо на ' . htmlspecialchars($forumTitle) . '!</h1>
             <p>Приєднуйтесь до нашої спільноти, діліться досвідом, знаходьте відповіді на свої запитання та спілкуйтесь з однодумцями!</p>
             <a href="/" class="btn">Перейти до форуму</a>
-            <a href="/signup" class="btn btn-secondary">Зареєструватися</a>
+            <a href="/register" class="btn btn-secondary">Зареєструватися</a>
         </div>
 
         <div class="content-grid">
@@ -236,8 +245,8 @@ class HomepageController implements RequestHandlerInterface
                     <h3>' . htmlspecialchars($tag->name) . '</h3>
                     <p>' . htmlspecialchars($tag->description ?: 'Обговорення на різні теми') . '</p>
                     <div class="category-stats">
-                        📝 ' . $tag->discussion_count . ' ' . $this->pluralize($tag->discussion_count, 'тема', 'теми', 'тем') . ' • 
-                        💬 ' . $tag->post_count . ' ' . $this->pluralize($tag->post_count, 'повідомлення', 'повідомлення', 'повідомлень') . '
+                        📝 ' . $tag->discussion_count . ' тем • 
+                        💬 ' . $tag->post_count . ' повідомлень
                     </div>
                 </div>';
         }
@@ -249,14 +258,14 @@ class HomepageController implements RequestHandlerInterface
                 <h2>🔥 Останні повідомлення</h2>';
         
         foreach ($discussions as $discussion) {
-            $author = $discussion->user;
+            $user = $this->db->table('users')->where('id', $discussion->user_id)->first();
             $timeAgo = $this->timeAgo($discussion->created_at);
             
             $html .= '
                 <div class="post-item" onclick="window.location.href=\'/d/' . $discussion->id . '\'">
                     <div class="post-title">' . htmlspecialchars($discussion->title) . '</div>
                     <div class="post-meta">
-                        <span class="post-author">' . htmlspecialchars($author ? $author->display_name : 'Користувач') . '</span> • ' . $timeAgo . '
+                        <span class="post-author">' . htmlspecialchars($user ? $user->display_name : 'Користувач') . '</span> • ' . $timeAgo . '
                     </div>
                 </div>';
         }
@@ -301,15 +310,5 @@ class HomepageController implements RequestHandlerInterface
         if ($diff < 86400) return floor($diff / 3600) . ' год тому';
         if ($diff < 604800) return floor($diff / 86400) . ' дн тому';
         return date('d.m.Y', $time);
-    }
-
-    private function pluralize($number, $one, $few, $many)
-    {
-        $mod10 = $number % 10;
-        $mod100 = $number % 100;
-        
-        if ($mod10 == 1 && $mod100 != 11) return $one;
-        if ($mod10 >= 2 && $mod10 <= 4 && ($mod100 < 10 || $mod100 >= 20)) return $few;
-        return $many;
     }
 }
