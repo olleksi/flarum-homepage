@@ -1,6 +1,6 @@
 {
     "name": "olleksi/flarum-homepage",
-    "description": "Головна сторінка для Flarum",
+    "description": "Красива головна сторінка для Flarum",
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
@@ -8,11 +8,11 @@
     },
     "extra": {
         "flarum-extension": {
-            "title": "Homepage",
+            "title": "Custom Homepage",
             "category": "feature",
             "icon": {
                 "name": "fas fa-home",
-                "backgroundColor": "#4d698e",
+                "backgroundColor": "#667eea",
                 "color": "#fff"
             }
         }
